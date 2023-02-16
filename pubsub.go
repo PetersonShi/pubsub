@@ -39,7 +39,7 @@ func(d *Subscriber)GetElement()*Element {
 }
 
 
-type Runner struct {
+type Server struct {
 	exactTopics    map[string]*list.List
 	patternTopics  map[string]*list.List
 	topicsMutex    sync.Mutex
@@ -47,7 +47,7 @@ type Runner struct {
 	unpublishedMsg chan *msgData
 }
 
-func(s *Runner) start(){
+func(s *Server) start(){
 	go func(){
 		for ;; {
 			select {
@@ -60,11 +60,11 @@ func(s *Runner) start(){
 	}()
 }
 
-func(s *Runner) Stop(){
+func(s *Server) Stop(){
 	close(s.done)
 }
 
-func(s *Runner) Subscribe(topic string, ps ISubscriber)bool{
+func(s *Server) Subscribe(topic string, ps ISubscriber)bool{
 	s.topicsMutex.Lock()
 	defer s.topicsMutex.Unlock()
 
@@ -98,7 +98,7 @@ func(s *Runner) Subscribe(topic string, ps ISubscriber)bool{
 	return true
 }
 
-func(s *Runner) Unsubscribe(topic string, subs ISubscriber){
+func(s *Server) Unsubscribe(topic string, subs ISubscriber){
 	s.topicsMutex.Lock()
 	defer s.topicsMutex.Unlock()
 
@@ -141,7 +141,7 @@ func(s *Runner) Unsubscribe(topic string, subs ISubscriber){
 	}
 }
 
-func(s *Runner) Publish(topic string,data interface{}){
+func(s *Server) Publish(topic string,data interface{}){
 
 	if !standardizedTopic(&topic){
 		return
@@ -153,7 +153,7 @@ func(s *Runner) Publish(topic string,data interface{}){
 	s.unpublishedMsg <-msg
 }
 
-func(s *Runner) dopublish(msg *msgData){
+func(s *Server) dopublish(msg *msgData){
 	if msg == nil{
 		return
 	}
@@ -197,7 +197,7 @@ func(s *Runner) dopublish(msg *msgData){
 	}
 }
 
-func(s *Runner) GetTopics()[]string{
+func(s *Server) GetTopics()[]string{
 	s.topicsMutex.Lock()
 	defer s.topicsMutex.Unlock()
 
@@ -214,7 +214,7 @@ func(s *Runner) GetTopics()[]string{
 	return topics
 }
 
-func(s *Runner) GetSubscriberCount(topic string)int{
+func(s *Server) GetSubscriberCount(topic string)int{
 	s.topicsMutex.Lock()
 	defer s.topicsMutex.Unlock()
 
@@ -256,13 +256,13 @@ func isPatternTopic(topic string) bool{
 	return true
 }
 
-func NewRunner(params ...int16)*Runner {
+func NewServer(params ...int16)*Server {
 	var cachedSize int16= 100
 	for _, v := range params {
 		cachedSize = v
 		break
 	}
-	s := &Runner{}
+	s := &Server{}
 	s.done = make(chan interface{},0)
 	s.unpublishedMsg = make(chan *msgData,cachedSize)
 	s.start()

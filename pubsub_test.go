@@ -18,62 +18,62 @@ import (
 	"time"
 )
 
-type User struct {
+type SubscriberEntity struct {
 	Subscriber
 	name string
 }
 
 
-func (u *User)OnPublish(channel string,data interface{})  {
+func (u *SubscriberEntity)OnPublish(channel string,data interface{})  {
 	fmt.Println(u.name,":",data.(string))
 }
 
-func NewUser(name string)*User {
-	return &User{name: name}
+func newSubscriberEntity(name string)*SubscriberEntity {
+	return &SubscriberEntity{name: name}
 }
 
 func TestAll(t *testing.T) {
-	runner := NewRunner()
-	userA := NewUser("Jim")
-	userB := NewUser("Tom")
-	userC := NewUser("Jack")
+	server := NewServer()
+	a := newSubscriberEntity("Jim")
+	b := newSubscriberEntity("Tom")
+	c := newSubscriberEntity("Jack")
 
-	runner.Subscribe("hello",userA)
-	runner.Subscribe("hello*",userB)
-	runner.Subscribe("helloworld",userC)
-	runner.Subscribe("hello",userC)
+	server.Subscribe("hello", a)
+	server.Subscribe("hello*", b)
+	server.Subscribe("helloworld", c)
+	server.Subscribe("hello", c)
 
 	//[helloworld hello hello*]
-	fmt.Println(runner.GetTopics())
+	fmt.Println(server.GetTopics())
 
 	//Jim : hello
 	//Jack : hello
 	//Tom : hello
-	runner.Publish("hello","hello")
+	server.Publish("hello","hello")
 	time.Sleep(time.Millisecond*100)
 
 	//Tom : helloworld
 	//Jack : helloworld
-	runner.Publish("helloworld","helloworld")
+	server.Publish("helloworld","helloworld")
 	time.Sleep(time.Millisecond*100)
 
-	runner.Unsubscribe("hello",userA)
+	server.Unsubscribe("hello", a)
 	//Jack : hello world
 	//Tom : hello world
-	runner.Publish("hello","hello world")
+	server.Publish("hello","hello world")
 	time.Sleep(time.Millisecond*100)
 
 	//[hello* helloworld]
-	runner.Unsubscribe("hello",nil)
-	fmt.Println(runner.GetTopics())
+	server.Unsubscribe("hello",nil)
+	fmt.Println(server.GetTopics())
 
 	//Tom : hello world again
-	runner.Publish("hello","hello world again")
+	server.Publish("hello","hello world again")
 	time.Sleep(time.Millisecond*100)
 
 	//[helloworld]
-	runner.Unsubscribe("hello*",nil)
-	fmt.Println(runner.GetTopics())
+	server.Unsubscribe("hello*",nil)
+	fmt.Println(server.GetTopics())
 	time.Sleep(time.Millisecond*100)
 
 }
